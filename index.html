@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EBD Jovens</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a6b3a">
+
+<style>
+body{font-family:Arial;margin:0;background:#f4f4f4}
+header{background:#1a6b3a;color:#fff;padding:10px;text-align:center}
+.container{padding:10px}
+button{padding:10px;margin:5px;width:100%}
+.card{background:#fff;padding:10px;margin:10px 0;border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border:1px solid #ddd;padding:6px;text-align:center}
+th{background:#1a6b3a;color:#fff}
+</style>
+</head>
+<body>
+
+<header>EBD Jovens</header>
+
+<div class="container">
+
+<div class="card">
+<h3>Selecionar Jovem</h3>
+<div id="youths"></div>
+</div>
+
+<div class="card">
+<h3>Ações</h3>
+<div id="actions"></div>
+</div>
+
+<div class="card">
+<h3>Ranking</h3>
+<div id="ranking"></div>
+</div>
+
+<div class="card">
+<h3>Histórico (tipo planilha)</h3>
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>Jovem</th>
+<th>Ação</th>
+<th>Pontos</th>
+</tr>
+</thead>
+<tbody id="historyTable"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+// EDITAR AQUI
+const YOUTHS = ["Alif","Bruno","Carla"];
+const ACTIONS = [
+ {name:"Presença",pts:5},
+ {name:"Bíblia",pts:5},
+ {name:"Participação",pts:10},
+ {name:"Visitante",pts:15}
+];
+
+// sistema
+let scores = JSON.parse(localStorage.getItem("scores")||"{}");
+let history = JSON.parse(localStorage.getItem("history")||"[]");
+let selected=null;
+
+function save(){
+ localStorage.setItem("scores",JSON.stringify(scores));
+ localStorage.setItem("history",JSON.stringify(history));
+}
+
+function render(){
+ renderYouths();
+ renderActions();
+ renderRanking();
+ renderHistory();
+}
+
+function renderYouths(){
+ let html="";
+ YOUTHS.forEach(y=>{
+  html+=`<button onclick="selectYouth('${y}')">${y}</button>`;
+ });
+ youths.innerHTML=html;
+}
+
+function renderActions(){
+ let html="";
+ ACTIONS.forEach(a=>{
+  html+=`<button onclick="addPoints('${a.name}',${a.pts})">${a.name} (+${a.pts})</button>`;
+ });
+ actions.innerHTML=html;
+}
+
+function renderRanking(){
+ let sorted=[...YOUTHS].sort((a,b)=>(scores[b]||0)-(scores[a]||0));
+ let html="";
+ sorted.forEach(y=>{
+  html+=`<div>${y}: ${scores[y]||0} pts</div>`;
+ });
+ ranking.innerHTML=html;
+}
+
+function renderHistory(){
+ let html="";
+ history.slice().reverse().forEach(h=>{
+  html+=`<tr>
+   <td>${h.date}</td>
+   <td>${h.youth}</td>
+   <td>${h.action}</td>
+   <td>+${h.pts}</td>
+  </tr>`;
+ });
+ historyTable.innerHTML=html;
+}
+
+function selectYouth(y){
+ selected=y;
+ alert("Selecionado: "+y);
+}
+
+function addPoints(action,pts){
+ if(!selected){alert("Selecione um jovem");return;}
+ scores[selected]=(scores[selected]||0)+pts;
+
+ const now=new Date();
+ const date=now.toLocaleDateString()+" "+now.toLocaleTimeString().slice(0,5);
+
+ history.push({date,youth:selected,action,pts});
+
+ save();
+ render();
+}
+
+render();
+
+// service worker
+if ('serviceWorker' in navigator) {
+ navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
