@@ -359,11 +359,11 @@ function subscribeRealtime() {
 
 async function reloadYouths() {
   const {data} = await db.from('youths').select('*').order('total_points', {ascending:false});
-  if(data) { youths = data; renderHome(); renderAdd(); renderConfig(); }
+  if(data) { youths = data; renderHome(); renderYouthListOnly(); renderConfigSilent(); }
 }
 async function reloadHistory() {
   const {data} = await db.from('history').select('*').order('created_at', {ascending:false}).limit(500);
-  if(data) { history = data; renderHome(); renderHist(); }
+  if(data) { history = data; renderHome(); renderHistSilent(); }
 }
 async function reloadActions() {
   const {data} = await db.from('actions').select('*').order('sort_order');
@@ -456,6 +456,15 @@ async function addPoints(actionId) {
   if(!selectedYouth) return;
   const action = actions.find(a=>a.id===actionId);
   if(!action) return;
+
+  // Atualiza estado local imediatamente (optimistic update)
+  const youth = youths.find(y=>y.name===selectedYouth);
+  if(youth) youth.total_points += action.points;
+  renderYouthListOnly();
+  renderHome();
+  showToast(`${action.icon} +${action.points} pts para ${selectedYouth}`, false);
+
+  // Salva no banco em background
   setSyncState('syncing');
   try {
     await db.from('history').insert({
@@ -466,11 +475,14 @@ async function addPoints(actionId) {
       points:      action.points
     });
     await db.from('youths')
-      .update({total_points: getScore(selectedYouth) + action.points})
+      .update({total_points: getScore(selectedYouth)})
       .eq('name', selectedYouth);
     setSyncState('online');
-    showToast(`${action.icon} +${action.points} pts para ${selectedYouth}`, false);
   } catch(err) {
+    // Reverte se falhar
+    if(youth) youth.total_points -= action.points;
+    renderYouthListOnly();
+    renderHome();
     setSyncState('offline');
     showToast('⚠ Erro ao salvar. Verifique a conexão.', true);
   }
@@ -639,6 +651,36 @@ async function resetAll() {
   showToast('✓ Pontuação zerada com sucesso!', false);
 }
 
+// ── Render helpers que não resetam seleção ────────────────────────────────
+function renderYouthListOnly() {
+  // Atualiza apenas a lista de jovens e os pts badges sem mudar seleção
+  const container = document.getElementById('young-list');
+  if(!container) return;
+  container.innerHTML = youths.map(y=>`
+    <button class="young-btn ${selectedYouth===y.name?'selected':''}" onclick="selectYouth('${y.name.replace(/'/g,"\\'")}')">
+      <span>${y.name}</span><span class="pts-badge">${y.total_points} pts</span>
+    </button>`).join('');
+  // Atualiza também os pts nas action cards sem recriar o grid
+  if(selectedYouth) {
+    const grid = document.getElementById('action-grid');
+    if(grid) {
+      grid.querySelectorAll('.action-card.disabled').forEach(c=>c.classList.remove('disabled'));
+    }
+  }
+}
+
+function renderHistSilent() {
+  // Só atualiza histórico se a aba estiver ativa
+  const screen = document.getElementById('screen-hist');
+  if(screen && screen.classList.contains('active')) renderHist();
+}
+
+function renderConfigSilent() {
+  // Só atualiza config se a aba estiver ativa
+  const screen = document.getElementById('screen-config');
+  if(screen && screen.classList.contains('active')) renderConfig();
+}
+
 function showToast(msg, isRed) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -669,9 +711,10 @@ setInterval(async () => {
         youths  = y.data;
         history = h.data;
         renderHome();
-        renderAdd();
-        renderHist();
-        renderConfig();
+        renderHistSilent();
+        renderConfigSilent();
+        // Atualiza pontos na lista de jovens sem resetar seleção
+        renderYouthListOnly();
       }
       if(!isOnline) { isOnline=true; setSyncState('online'); }
     }
