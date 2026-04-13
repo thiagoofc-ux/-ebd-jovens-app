@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="theme-color" content="#1a3a2a"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="EBD Jovens"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<title>EBD Jovens</title>
+<style>
+:root{
+  --g0:#0d2018;--g1:#1a3a2a;--g2:#1a6b3a;--g3:#2d9c5a;--g4:#7abf8a;--g5:#b8e6c8;--g6:#e8f5ec;
+  --surface:#fff;--surface2:#f5f7f5;--surface3:#eef2ef;
+  --text1:#0d1f15;--text2:#3d5a47;--text3:#7a9885;
+  --border:rgba(26,58,42,0.12);--border2:rgba(26,58,42,0.2);
+  --radius:14px;--radius-sm:8px;
+  --shadow:0 2px 12px rgba(13,32,24,0.08);--shadow-lg:0 8px 32px rgba(13,32,24,0.12);
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --gold:#d4a017;--silver:#8c9aab;--bronze:#9c6b3a;
+  --danger:#c0392b;--danger-light:#fdf0ef;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--surface2)}
+body{font-family:var(--font);color:var(--text1);display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative}
+
+.header{background:var(--g1);padding:env(safe-area-inset-top,0) 0 0;flex-shrink:0}
+.header-inner{padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:600;color:#fff;letter-spacing:-0.3px}
+.header p{font-size:11px;color:var(--g4);margin-top:1px}
+.trimester-badge{background:rgba(255,255,255,0.12);color:var(--g5);font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500}
+.sync-indicator{font-size:11px;color:var(--g4);display:flex;align-items:center;gap:4px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--g4);animation:pulse 2s infinite}
+.sync-dot.offline{background:#e74c3c;animation:none}
+.sync-dot.syncing{background:#f39c12;animation:spin 1s linear infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;flex-shrink:0}
+.tab{flex:1;padding:11px 4px 9px;border:none;background:transparent;cursor:pointer;font-size:10px;font-family:var(--font);color:var(--text3);display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;transition:color .15s;font-weight:500;letter-spacing:0.3px}
+.tab.active{color:var(--g2)}
+.tab.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--g2);border-radius:2px 2px 0 0}
+.tab-icon{font-size:19px;line-height:1}
+
+.screens{flex:1;overflow:hidden;position:relative}
+.screen{position:absolute;inset:0;overflow-y:auto;display:none;background:var(--surface2);padding-bottom:16px}
+.screen.active{display:block}
+
+.summary-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 12px 0}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;text-align:center}
+.summary-card .val{font-size:22px;font-weight:600;color:var(--g2);line-height:1.2}
+.summary-card .lbl{font-size:10px;color:var(--text3);margin-top:2px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase}
+
+.section-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:14px 16px 6px}
+
+.rank-list{display:flex;flex-direction:column;gap:6px;padding:0 12px}
+.rank-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:12px;transition:border-color .15s}
+.rank-card.rank-1{border-left:3px solid var(--gold)}
+.rank-card.rank-2{border-left:3px solid var(--silver)}
+.rank-card.rank-3{border-left:3px solid var(--bronze)}
+.rank-badge{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.rank-badge.b1{background:#fff8e0;color:var(--gold)}
+.rank-badge.b2{background:#f0f2f4;color:var(--silver)}
+.rank-badge.b3{background:#fdf0e6;color:var(--bronze)}
+.rank-badge.bn{background:var(--surface3);color:var(--text3);font-size:12px}
+.rank-info{flex:1;min-width:0}
+.rank-name{font-size:14px;font-weight:600;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-bar-bg{height:3px;background:var(--g6);border-radius:2px;margin-top:5px}
+.rank-bar{height:3px;background:var(--g3);border-radius:2px;transition:width .5s ease}
+.rank-actions{font-size:11px;color:var(--text3);margin-top:2px}
+.rank-score{font-size:22px;font-weight:600;color:var(--g2);flex-shrink:0}
+
+.fab{position:sticky;bottom:16px;margin:12px 12px 0;background:var(--g2);color:#fff;border:none;border-radius:var(--radius);padding:15px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font);width:calc(100% - 24px);transition:background .15s;box-shadow:var(--shadow-lg)}
+.fab:active{background:var(--g1);transform:scale(0.98)}
+
+.young-section{padding:0 12px}
+.young-btn{width:100%;margin-bottom:6px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:var(--font);font-size:14px;font-weight:500;color:var(--text1);transition:all .12s}
+.young-btn.selected{background:var(--g2);border-color:var(--g2);color:#fff}
+.young-btn .pts-badge{font-size:12px;opacity:0.7;font-weight:400}
+.action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 12px}
+.action-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .12s;min-height:96px;justify-content:center}
+.action-card:hover{border-color:var(--g3);background:var(--g6)}
+.action-card:active{transform:scale(0.95)}
+.action-card.disabled{opacity:0.45;cursor:default;pointer-events:none}
+.action-card .a-icon{font-size:26px;line-height:1}
+.action-card .a-name{font-size:11px;font-weight:600;color:var(--text1);text-align:center}
+.action-card .a-pts{font-size:11px;font-weight:500;color:var(--g2)}
+.hint-text{text-align:center;padding:12px 16px;font-size:12px;color:var(--text3)}
+
+.mode-toggle{display:flex;gap:6px;padding:0 12px;margin-bottom:4px}
+.mode-btn{flex:1;padding:9px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);transition:all .12s}
+.mode-btn.active-add{background:var(--g6);border-color:var(--g2);color:var(--g2)}
+.mode-btn.active-sub{background:#fdf0ef;border-color:var(--danger);color:var(--danger)}
+
+.toast{margin:8px 12px 0;background:var(--g0);color:var(--g4);border-radius:var(--radius);padding:12px 16px;font-size:13px;font-weight:500;display:none;align-items:center;gap:8px}
+.toast.show{display:flex;animation:slideDown .2s ease}
+.toast.red{background:#3a1a1a;color:#f4a0a0}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+.hist-controls{display:flex;gap:8px;padding:0 12px;align-items:center}
+.hist-filter{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:var(--surface);color:var(--text1);outline:none}
+.export-btn{padding:8px 14px;background:var(--g2);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+.hist-person-filter{display:flex;gap:6px;padding:0 12px;overflow-x:auto;scrollbar-width:none}
+.hist-person-filter::-webkit-scrollbar{display:none}
+.hpf-chip{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--text2);flex-shrink:0;transition:all .12s}
+.hpf-chip.active{background:var(--g2);border-color:var(--g2);color:#fff}
+.table-wrap{padding:0 12px;margin-top:8px;overflow-x:auto}
+.hist-table{width:100%;border-collapse:collapse;font-size:12px;background:var(--surface);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+.hist-table thead{background:var(--g1);color:#fff}
+.hist-table th{padding:9px 10px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.4px;white-space:nowrap}
+.hist-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text1);white-space:nowrap}
+.hist-table tr:last-child td{border-bottom:none}
+.hist-table tr:hover td{background:var(--g6)}
+.hist-table .pts-cell{font-weight:600;font-family:var(--mono)}
+.hist-table .time-cell{color:var(--text3);font-family:var(--mono);font-size:11px}
+.empty-state{text-align:center;padding:48px 16px;color:var(--text3)}
+.empty-state .e-icon{font-size:40px;margin-bottom:12px}
+
+.config-section{margin:0 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.config-row{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);gap:10px}
+.config-row:last-child{border-bottom:none}
+.config-row .cr-icon{font-size:20px;flex-shrink:0}
+.config-row .cr-label{flex:1;font-size:14px;font-weight:500}
+.pts-input{width:64px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:var(--mono);font-size:14px;font-weight:500;color:var(--g2);text-align:center;outline:none}
+.pts-input:focus{border-color:var(--g2)}
+.youth-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:8px}
+.youth-row:last-child{border-bottom:none}
+.youth-row .yr-name{flex:1;font-size:14px;font-weight:500}
+.youth-row .yr-pts{font-size:12px;color:var(--g2);font-family:var(--mono)}
+.del-btn{width:28px;height:28px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:16px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all .12s}
+.del-btn:hover{background:var(--danger-light);color:var(--danger)}
+.add-row{display:flex;gap:8px;padding:8px 12px 0}
+.add-input{flex:1;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:var(--font);font-size:14px;color:var(--text1);outline:none;background:var(--surface)}
+.add-input:focus{border-color:var(--g2)}
+.add-btn{padding:10px 16px;background:var(--g2);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer}
+.reset-btn{margin:8px 12px 0;width:calc(100% - 24px);padding:12px;border:1px solid rgba(192,57,43,0.3);border-radius:var(--radius);background:none;color:var(--danger);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .12s}
+.reset-btn:hover{background:var(--danger-light)}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-overlay.show{display:flex;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border-radius:var(--radius);padding:24px;width:100%;max-width:320px;box-shadow:var(--shadow-lg)}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.modal p{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.modal-cancel{padding:8px 16px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:none;font-family:var(--font);font-size:13px;cursor:pointer;color:var(--text2)}
+.modal-confirm{padding:8px 16px;background:var(--danger);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+
+.sub-modal-box{background:var(--surface);border-radius:var(--radius);padding:24px;width:100%;max-width:320px;box-shadow:var(--shadow-lg)}
+.sub-modal-box h3{font-size:16px;font-weight:600;margin-bottom:4px}
+.sub-youth-lbl{font-size:13px;color:var(--g2);font-weight:600;margin-bottom:4px}
+.sub-current-lbl{font-size:12px;color:var(--text3);margin-bottom:16px}
+.sub-qty-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;justify-content:center}
+.sub-qty-btn{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border2);background:var(--surface2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--text1);transition:all .12s}
+.sub-qty-btn:hover{border-color:var(--danger);color:var(--danger)}
+.sub-qty-btn.plus:hover{border-color:var(--g2);color:var(--g2)}
+.sub-qty-val{font-size:32px;font-weight:600;color:var(--danger);font-family:var(--mono);min-width:52px;text-align:center}
+.sub-reason{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;color:var(--text1);outline:none;background:var(--surface);margin-bottom:14px}
+.sub-reason:focus{border-color:var(--g2)}
+.sub-confirm{width:100%;padding:12px;background:var(--danger);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.sub-cancel-btn{width:100%;padding:10px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:none;font-family:var(--font);font-size:13px;cursor:pointer;color:var(--text2)}
+
+.loading-screen{position:fixed;inset:0;background:var(--g1);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:16px}
+.loading-screen.hidden{display:none}
+.loading-screen h2{color:#fff;font-size:20px;font-weight:600}
+.loading-screen p{color:var(--g4);font-size:13px}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-screen" id="loading">
+  <div class="spinner"></div>
+  <h2>EBD Jovens</h2>
+  <p>Conectando ao banco de dados...</p>
+</div>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1>EBD Jovens</h1>
+      <p>Sistema de Pontuação</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+      <span class="trimester-badge">2º Trim 2026</span>
+      <div class="sync-indicator">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-label">online</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('home')" id="tab-home"><span class="tab-icon">🏠</span>Início</button>
+  <button class="tab" onclick="showTab('add')" id="tab-add"><span class="tab-icon">➕</span>Pontos</button>
+  <button class="tab" onclick="showTab('hist')" id="tab-hist"><span class="tab-icon">📊</span>Histórico</button>
+  <button class="tab" onclick="showTab('config')" id="tab-config"><span class="tab-icon">⚙️</span>Config</button>
+</div>
+
+<div class="screens">
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="summary-bar" id="summary-bar"></div>
+    <div class="section-label">Ranking</div>
+    <div class="rank-list" id="rank-list"></div>
+    <button class="fab" onclick="showTab('add')">➕ Adicionar Pontos</button>
+  </div>
+
+  <!-- ADD POINTS -->
+  <div class="screen" id="screen-add">
+    <div class="toast" id="toast"></div>
+    <div class="section-label">Selecione o jovem</div>
+    <div class="young-section" id="young-list"></div>
+    <div class="section-label" style="padding-bottom:8px">Modo</div>
+    <div class="mode-toggle">
+      <button class="mode-btn active-add" id="mode-add-btn" onclick="setMode('add')">➕ Adicionar</button>
+      <button class="mode-btn" id="mode-sub-btn" onclick="setMode('sub')">➖ Retirar</button>
+    </div>
+    <div id="add-section">
+      <div class="section-label">Selecione a ação</div>
+      <div class="action-grid" id="action-grid"></div>
+      <div class="hint-text" id="hint-text">⬆ Selecione um jovem para habilitar as ações</div>
+    </div>
+    <div id="sub-section" style="display:none;padding:0 12px">
+      <div class="hint-text" id="hint-text-sub" style="padding:12px 0">⬆ Selecione um jovem para retirar pontos</div>
+      <button id="sub-open-btn" style="display:none;width:100%;padding:14px;background:#fdf0ef;border:1.5px solid var(--danger);border-radius:var(--radius);font-family:var(--font);font-size:15px;font-weight:600;color:var(--danger);cursor:pointer" onclick="openSubModal()">
+        ➖ Retirar pontos de <span id="sub-youth-name">—</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="screen" id="screen-hist">
+    <div class="section-label" style="padding-bottom:8px">Filtros</div>
+    <div class="hist-controls">
+      <select class="hist-filter" id="hist-person-select" onchange="renderHist()">
+        <option value="">Todos os jovens</option>
+      </select>
+      <button class="export-btn" onclick="exportCSV()">📥 Excel</button>
+    </div>
+    <div class="hist-person-filter" id="hist-chips" style="margin-top:8px"></div>
+    <div class="table-wrap" id="hist-table-wrap"></div>
+  </div>
+
+  <!-- CONFIG -->
+  <div class="screen" id="screen-config">
+    <div class="section-label">Valores dos pontos</div>
+    <div class="config-section" id="pts-config"></div>
+    <div class="section-label">Jovens cadastrados</div>
+    <div class="config-section" id="youth-config"></div>
+    <div class="add-row">
+      <input class="add-input" id="new-youth-input" placeholder="Nome do jovem..." onkeydown="if(event.key==='Enter')addYouth()"/>
+      <button class="add-btn" onclick="addYouth()">Adicionar</button>
+    </div>
+    <button class="reset-btn" onclick="document.getElementById('modal').classList.add('show')">🗑 Zerar pontuação de todos</button>
+  </div>
+</div>
+
+<!-- Reset Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>Zerar pontuação?</h3>
+    <p>Isso apaga todos os pontos e o histórico completo. Esta ação não pode ser desfeita.</p>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal').classList.remove('show')">Cancelar</button>
+      <button class="modal-confirm" onclick="resetAll()">Zerar tudo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subtract Modal -->
+<div class="modal-overlay" id="sub-modal">
+  <div class="sub-modal-box">
+    <h3>Retirar pontos</h3>
+    <div class="sub-youth-lbl" id="sub-modal-youth"></div>
+    <div class="sub-current-lbl" id="sub-modal-current"></div>
+    <div class="sub-qty-row">
+      <button class="sub-qty-btn" onclick="changeSubQty(-5)">−5</button>
+      <button class="sub-qty-btn" onclick="changeSubQty(-1)">−1</button>
+      <div class="sub-qty-val" id="sub-qty">1</div>
+      <button class="sub-qty-btn plus" onclick="changeSubQty(1)">+1</button>
+      <button class="sub-qty-btn plus" onclick="changeSubQty(5)">+5</button>
+    </div>
+    <input class="sub-reason" id="sub-reason" placeholder="Motivo (opcional)..." maxlength="60"/>
+    <button class="sub-confirm" onclick="confirmSubtract()">Confirmar retirada</button>
+    <button class="sub-cancel-btn" onclick="document.getElementById('sub-modal').classList.remove('show')">Cancelar</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── Supabase setup ─────────────────────────────────────────────────────────
+const SUPA_URL = 'https://wbiosktwcnquuirjrexl.supabase.co';
+const SUPA_KEY = 'sb_publishable_gc4RRYl0RFTgZS7AvMsK6w_djNvSU-O';
+const { createClient } = supabase;
+const db = createClient(SUPA_URL, SUPA_KEY);
+
+// ── State ──────────────────────────────────────────────────────────────────
+let youths   = [];
+let actions  = [];
+let history  = [];
+let selectedYouth = null;
+let currentMode   = 'add';
+let subQty        = 1;
+let histFilter    = '';
+let isOnline      = true;
+
+// ── Sync indicator ─────────────────────────────────────────────────────────
+function setSyncState(state) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot' + (state==='syncing' ? ' syncing' : state==='offline' ? ' offline' : '');
+  lbl.textContent = state==='syncing' ? 'sincronizando...' : state==='offline' ? 'offline' : 'online';
+}
+
+// ── Load all data ──────────────────────────────────────────────────────────
+async function loadAll() {
+  try {
+    setSyncState('syncing');
+    const [y, a, h] = await Promise.all([
+      db.from('youths').select('*').order('total_points', {ascending:false}),
+      db.from('actions').select('*').order('sort_order'),
+      db.from('history').select('*').order('created_at', {ascending:false}).limit(500)
+    ]);
+    if(y.error) throw y.error;
+    youths  = y.data || [];
+    actions = a.data || [];
+    history = h.data || [];
+    isOnline = true;
+    setSyncState('online');
+    document.getElementById('loading').classList.add('hidden');
+    renderAll();
+  } catch(err) {
+    console.error(err);
+    isOnline = false;
+    setSyncState('offline');
+    document.getElementById('loading').classList.add('hidden');
+    showToast('⚠ Sem conexão com o servidor', true);
+  }
+}
+
+// ── Real-time subscriptions ────────────────────────────────────────────────
+function subscribeRealtime() {
+  db.channel('ebd-changes')
+    .on('postgres_changes', {event:'*', schema:'public', table:'youths'},   () => reloadYouths())
+    .on('postgres_changes', {event:'*', schema:'public', table:'history'},  () => reloadHistory())
+    .on('postgres_changes', {event:'*', schema:'public', table:'actions'},  () => reloadActions())
+    .subscribe();
+}
+
+async function reloadYouths() {
+  const {data} = await db.from('youths').select('*').order('total_points', {ascending:false});
+  if(data) { youths = data; renderHome(); renderAdd(); renderConfig(); }
+}
+async function reloadHistory() {
+  const {data} = await db.from('history').select('*').order('created_at', {ascending:false}).limit(500);
+  if(data) { history = data; renderHome(); renderHist(); }
+}
+async function reloadActions() {
+  const {data} = await db.from('actions').select('*').order('sort_order');
+  if(data) { actions = data; renderAdd(); renderConfig(); }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const getScore = name => (youths.find(y=>y.name===name)||{total_points:0}).total_points;
+const renderAll = () => { renderHome(); renderAdd(); renderHist(); renderConfig(); };
+
+// ── Tab navigation ─────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ── HOME ───────────────────────────────────────────────────────────────────
+function renderHome() {
+  const total = youths.reduce((s,y)=>s+y.total_points,0);
+  document.getElementById('summary-bar').innerHTML = `
+    <div class="summary-card"><div class="val">${youths.length}</div><div class="lbl">Jovens</div></div>
+    <div class="summary-card"><div class="val">${total}</div><div class="lbl">Pontos</div></div>
+    <div class="summary-card"><div class="val">${history.length}</div><div class="lbl">Registros</div></div>`;
+
+  if(!youths.length) {
+    document.getElementById('rank-list').innerHTML = '<div class="empty-state"><div class="e-icon">👥</div><p>Nenhum jovem cadastrado</p></div>';
+    return;
+  }
+  const maxScore = Math.max(...youths.map(y=>y.total_points), 1);
+  document.getElementById('rank-list').innerHTML = youths.map((y,i) => {
+    const pct = Math.round((y.total_points/maxScore)*100);
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':null;
+    const bc = i===0?'b1':i===1?'b2':i===2?'b3':'bn';
+    const cc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    const cnt = history.filter(h=>h.youth_name===y.name).length;
+    return `<div class="rank-card ${cc}">
+      <div class="rank-badge ${bc}">${medal||(i+1)}</div>
+      <div class="rank-info">
+        <div class="rank-name">${y.name}</div>
+        <div class="rank-bar-bg"><div class="rank-bar" style="width:${pct}%"></div></div>
+        <div class="rank-actions">${cnt} ação${cnt!==1?'ões':''}</div>
+      </div>
+      <div class="rank-score">${y.total_points}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── ADD POINTS ─────────────────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('add-section').style.display   = mode==='add'?'block':'none';
+  document.getElementById('sub-section').style.display   = mode==='sub'?'block':'none';
+  document.getElementById('mode-add-btn').className = 'mode-btn'+(mode==='add'?' active-add':'');
+  document.getElementById('mode-sub-btn').className = 'mode-btn'+(mode==='sub'?' active-sub':'');
+  renderAdd();
+}
+
+function renderAdd() {
+  document.getElementById('young-list').innerHTML = youths.map(y=>`
+    <button class="young-btn ${selectedYouth===y.name?'selected':''}" onclick="selectYouth('${y.name.replace(/'/g,"\\'")}')">
+      <span>${y.name}</span><span class="pts-badge">${y.total_points} pts</span>
+    </button>`).join('');
+
+  if(currentMode==='add') {
+    const dis = !selectedYouth?'disabled':'';
+    document.getElementById('action-grid').innerHTML = actions.map(a=>`
+      <div class="action-card ${dis}" onclick="addPoints('${a.id}')">
+        <span class="a-icon">${a.icon}</span>
+        <span class="a-name">${a.name}</span>
+        <span class="a-pts">+${a.points} pts</span>
+      </div>`).join('');
+    document.getElementById('hint-text').style.display = selectedYouth?'none':'block';
+  } else {
+    const hintSub = document.getElementById('hint-text-sub');
+    const subBtn  = document.getElementById('sub-open-btn');
+    if(selectedYouth) {
+      hintSub.style.display='none'; subBtn.style.display='block';
+      document.getElementById('sub-youth-name').textContent = selectedYouth;
+    } else {
+      hintSub.style.display='block'; subBtn.style.display='none';
+    }
+  }
+}
+
+function selectYouth(name) { selectedYouth=name; renderAdd(); }
+
+async function addPoints(actionId) {
+  if(!selectedYouth) return;
+  const action = actions.find(a=>a.id===actionId);
+  if(!action) return;
+  setSyncState('syncing');
+  try {
+    await db.from('history').insert({
+      youth_name:  selectedYouth,
+      action_id:   action.id,
+      action_name: action.name,
+      action_icon: action.icon,
+      points:      action.points
+    });
+    await db.from('youths')
+      .update({total_points: getScore(selectedYouth) + action.points})
+      .eq('name', selectedYouth);
+    setSyncState('online');
+    showToast(`${action.icon} +${action.points} pts para ${selectedYouth}`, false);
+  } catch(err) {
+    setSyncState('offline');
+    showToast('⚠ Erro ao salvar. Verifique a conexão.', true);
+  }
+}
+
+// ── SUBTRACT ───────────────────────────────────────────────────────────────
+function openSubModal() {
+  if(!selectedYouth) return;
+  subQty = 1;
+  document.getElementById('sub-qty').textContent = subQty;
+  document.getElementById('sub-modal-youth').textContent  = selectedYouth;
+  document.getElementById('sub-modal-current').textContent = `Pontos atuais: ${getScore(selectedYouth)}`;
+  document.getElementById('sub-reason').value = '';
+  document.getElementById('sub-modal').classList.add('show');
+}
+
+function changeSubQty(d) {
+  subQty = Math.max(1, subQty+d);
+  document.getElementById('sub-qty').textContent = subQty;
+}
+
+async function confirmSubtract() {
+  if(!selectedYouth) return;
+  const reason = document.getElementById('sub-reason').value.trim() || 'Retirada manual';
+  const current = getScore(selectedYouth);
+  const deducted = Math.min(subQty, current);
+  if(deducted <= 0) {
+    document.getElementById('sub-modal').classList.remove('show');
+    showToast('⚠ Pontuação já está em zero!', true);
+    return;
+  }
+  document.getElementById('sub-modal').classList.remove('show');
+  setSyncState('syncing');
+  try {
+    await db.from('history').insert({
+      youth_name:  selectedYouth,
+      action_id:   'subtracao',
+      action_name: reason,
+      action_icon: '➖',
+      points:      -deducted
+    });
+    await db.from('youths')
+      .update({total_points: current - deducted})
+      .eq('name', selectedYouth);
+    setSyncState('online');
+    showToast(`➖ ${deducted} pts retirados de ${selectedYouth}`, true);
+  } catch(err) {
+    setSyncState('offline');
+    showToast('⚠ Erro ao salvar. Verifique a conexão.', true);
+  }
+}
+
+// ── HISTORY ────────────────────────────────────────────────────────────────
+function renderHist() {
+  const sel = document.getElementById('hist-person-select');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Todos os jovens</option>' +
+    youths.map(y=>`<option value="${y.name}" ${cur===y.name?'selected':''}>${y.name}</option>`).join('');
+
+  document.getElementById('hist-chips').innerHTML =
+    ['', ...youths.map(y=>y.name)].map(n=>`
+      <button class="hpf-chip ${histFilter===n?'active':''}" onclick="setHistFilter('${n.replace(/'/g,"\\'")}')">
+        ${n||'Todos'}
+      </button>`).join('');
+
+  const fp = histFilter || sel.value;
+  let filtered = [...history];
+  if(fp) filtered = filtered.filter(h=>h.youth_name===fp);
+
+  const wrap = document.getElementById('hist-table-wrap');
+  if(!filtered.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="e-icon">📊</div><p>Nenhum registro encontrado</p><small>${fp?'Tente outro jovem':'Adicione pontos na aba ➕'}</small></div>`;
+    return;
+  }
+
+  wrap.innerHTML = `<table class="hist-table">
+    <thead><tr><th>Data</th><th>Hora</th><th>Jovem</th><th>Ação</th><th>Pts</th></tr></thead>
+    <tbody>${filtered.map(h => {
+      const dt = new Date(h.created_at);
+      const date = dt.toLocaleDateString('pt-BR');
+      const time = dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      const color = h.points<0?'var(--danger)':'var(--g2)';
+      const sign  = h.points>0?'+':'';
+      return `<tr>
+        <td class="time-cell">${date}</td>
+        <td class="time-cell">${time}</td>
+        <td><strong>${h.youth_name}</strong></td>
+        <td>${h.action_icon} ${h.action_name}</td>
+        <td class="pts-cell" style="color:${color}">${sign}${h.points}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+function setHistFilter(n) { histFilter=n; renderHist(); }
+
+function exportCSV() {
+  const fp = histFilter || document.getElementById('hist-person-select').value;
+  let data = [...history];
+  if(fp) data = data.filter(h=>h.youth_name===fp);
+  if(!data.length) { alert('Nenhum dado para exportar.'); return; }
+  const bom = '\uFEFF';
+  const header = 'Data,Hora,Jovem,Ação,Pontos\n';
+  const rows = data.map(h=>{
+    const dt = new Date(h.created_at);
+    return `${dt.toLocaleDateString('pt-BR')},${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})},"${h.youth_name}","${h.action_name}",${h.points}`;
+  }).join('\n');
+  const blob = new Blob([bom+header+rows],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`EBD_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+function renderConfig() {
+  document.getElementById('pts-config').innerHTML = actions.map(a=>`
+    <div class="config-row">
+      <span class="cr-icon">${a.icon}</span>
+      <span class="cr-label">${a.name}</span>
+      <input class="pts-input" type="number" min="0" max="99" value="${a.points}"
+        onchange="updateActionPts('${a.id}',this.value)"/>
+    </div>`).join('');
+
+  document.getElementById('youth-config').innerHTML = youths.length
+    ? youths.map((y,i)=>`
+        <div class="youth-row">
+          <span class="yr-name">${y.name}</span>
+          <span class="yr-pts">${y.total_points} pts</span>
+          <button class="del-btn" onclick="removeYouth('${y.name.replace(/'/g,"\\'")}')">✕</button>
+        </div>`).join('')
+    : '<div style="padding:12px 14px;font-size:13px;color:var(--text3)">Nenhum jovem cadastrado</div>';
+}
+
+async function updateActionPts(id, val) {
+  const pts = parseInt(val)||0;
+  await db.from('actions').update({points:pts}).eq('id',id);
+  const a = actions.find(a=>a.id===id);
+  if(a) a.points = pts;
+  renderAdd();
+}
+
+async function addYouth() {
+  const inp = document.getElementById('new-youth-input');
+  const name = inp.value.trim();
+  if(!name) return;
+  if(youths.find(y=>y.name===name)) { showToast('⚠ Jovem já cadastrado!',true); return; }
+  inp.value='';
+  const {error} = await db.from('youths').insert({name, total_points:0});
+  if(error) showToast('⚠ Erro ao adicionar jovem',true);
+}
+
+async function removeYouth(name) {
+  if(!confirm(`Remover "${name}"?`)) return;
+  await db.from('history').delete().eq('youth_name', name);
+  await db.from('youths').delete().eq('name', name);
+  if(selectedYouth===name) selectedYouth=null;
+}
+
+async function resetAll() {
+  document.getElementById('modal').classList.remove('show');
+  setSyncState('syncing');
+  await db.from('history').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await db.from('youths').update({total_points:0}).neq('name','');
+  setSyncState('online');
+  showToast('✓ Pontuação zerada com sucesso!', false);
+}
+
+function showToast(msg, isRed) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isRed?' red':'');
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadAll();
+subscribeRealtime();
+</script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js')</script>
+</body>
+</html>
