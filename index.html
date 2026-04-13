@@ -651,6 +651,32 @@ function showToast(msg, isRed) {
 // ── Init ───────────────────────────────────────────────────────────────────
 loadAll();
 subscribeRealtime();
+
+// Polling fallback — atualiza a cada 5s caso o Realtime não esteja ativo
+setInterval(async () => {
+  try {
+    const [y, h] = await Promise.all([
+      db.from('youths').select('*').order('total_points', {ascending:false}),
+      db.from('history').select('*').order('created_at', {ascending:false}).limit(500)
+    ]);
+    if(!y.error && !h.error) {
+      const totalOld = youths.reduce((s,v)=>s+v.total_points,0);
+      const totalNew = y.data.reduce((s,v)=>s+v.total_points,0);
+      const changed  = y.data.length !== youths.length
+                    || totalNew !== totalOld
+                    || h.data.length !== history.length;
+      if(changed) {
+        youths  = y.data;
+        history = h.data;
+        renderHome();
+        renderAdd();
+        renderHist();
+        renderConfig();
+      }
+      if(!isOnline) { isOnline=true; setSyncState('online'); }
+    }
+  } catch(e) {}
+}, 5000);
 </script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js')</script>
 </body>
