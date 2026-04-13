@@ -1,4 +1,4 @@
-const CACHE = 'ebd-jovens-v1';
+const CACHE = 'ebd-jovens-v2';
 const FILES = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
