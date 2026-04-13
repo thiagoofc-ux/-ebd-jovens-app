@@ -101,6 +101,15 @@ body{font-family:var(--font);color:var(--text1);display:flex;flex-direction:colu
 @keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 
 .hist-controls{display:flex;gap:8px;padding:0 12px;align-items:center}
+.hist-filter-row{display:flex;gap:8px;padding:4px 12px 0;align-items:center}
+.hist-filter-row label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;white-space:nowrap;text-transform:uppercase}
+.hist-date-input{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;background:var(--surface);color:var(--text1);outline:none}
+.hist-date-input:focus{border-color:var(--g2)}
+.hist-action-select{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;background:var(--surface);color:var(--text1);outline:none}
+.hist-action-select:focus{border-color:var(--g2)}
+.clear-filters-btn{padding:7px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:none;font-family:var(--font);font-size:12px;color:var(--text3);cursor:pointer;white-space:nowrap}
+.clear-filters-btn:hover{color:var(--danger);border-color:var(--danger)}
+.hist-summary{padding:4px 12px 0;font-size:11px;color:var(--text3);font-weight:500}
 .hist-filter{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:var(--surface);color:var(--text1);outline:none}
 .export-btn{padding:8px 14px;background:var(--g2);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
 .hist-person-filter{display:flex;gap:6px;padding:0 12px;overflow-x:auto;scrollbar-width:none}
@@ -247,7 +256,21 @@ body{font-family:var(--font);color:var(--text1);display:flex;flex-direction:colu
       </select>
       <button class="export-btn" onclick="exportCSV()">📥 Excel</button>
     </div>
+    <div class="hist-filter-row" style="margin-top:6px">
+      <label>Ação</label>
+      <select class="hist-action-select" id="hist-action-select" onchange="renderHist()">
+        <option value="">Todas as ações</option>
+      </select>
+    </div>
+    <div class="hist-filter-row" style="margin-top:6px">
+      <label>De</label>
+      <input type="date" class="hist-date-input" id="hist-date-from" onchange="renderHist()"/>
+      <label>Até</label>
+      <input type="date" class="hist-date-input" id="hist-date-to" onchange="renderHist()"/>
+      <button class="clear-filters-btn" onclick="clearHistFilters()">✕</button>
+    </div>
     <div class="hist-person-filter" id="hist-chips" style="margin-top:8px"></div>
+    <div class="hist-summary" id="hist-summary"></div>
     <div class="table-wrap" id="hist-table-wrap"></div>
   </div>
 
@@ -311,7 +334,10 @@ let history  = [];
 let selectedYouth = null;
 let currentMode   = 'add';
 let subQty        = 1;
-let histFilter    = '';
+let histFilter       = '';
+let histFilterAction = '';
+let histDateFrom     = '';
+let histDateTo       = '';
 let isOnline      = true;
 
 // ── Sync indicator ─────────────────────────────────────────────────────────
@@ -580,9 +606,15 @@ function renderHist() {
 function setHistFilter(n) { histFilter=n; renderHist(); }
 
 function exportCSV() {
-  const fp = histFilter || document.getElementById('hist-person-select').value;
+  const fp    = histFilter || document.getElementById('hist-person-select').value;
+  const fa    = histFilterAction || document.getElementById('hist-action-select').value;
+  const dfrom = document.getElementById('hist-date-from').value;
+  const dto   = document.getElementById('hist-date-to').value;
   let data = [...history];
-  if(fp) data = data.filter(h=>h.youth_name===fp);
+  if(fp)    data = data.filter(h=>h.youth_name===fp);
+  if(fa)    data = data.filter(h=>h.action_name===fa);
+  if(dfrom) data = data.filter(h=>new Date(h.created_at)>=new Date(dfrom+'T00:00:00'));
+  if(dto)   data = data.filter(h=>new Date(h.created_at)<=new Date(dto+'T23:59:59'));
   if(!data.length) { alert('Nenhum dado para exportar.'); return; }
   const bom = '\uFEFF';
   const header = 'Data,Hora,Jovem,Ação,Pontos\n';
