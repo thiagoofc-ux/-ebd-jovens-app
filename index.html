@@ -694,7 +694,7 @@ function showToast(msg, isRed) {
 loadAll();
 subscribeRealtime();
 
-// Polling fallback — atualiza a cada 5s caso o Realtime não esteja ativo
+// Polling fallback — atualiza a cada 4s
 setInterval(async () => {
   try {
     const [y, h] = await Promise.all([
@@ -702,24 +702,27 @@ setInterval(async () => {
       db.from('history').select('*').order('created_at', {ascending:false}).limit(500)
     ]);
     if(!y.error && !h.error) {
-      const totalOld = youths.reduce((s,v)=>s+v.total_points,0);
-      const totalNew = y.data.reduce((s,v)=>s+v.total_points,0);
-      const changed  = y.data.length !== youths.length
-                    || totalNew !== totalOld
-                    || h.data.length !== history.length;
-      if(changed) {
-        youths  = y.data;
+      // Detecta qualquer mudança: qtd de jovens, nomes, pontos, ou qtd de registros
+      const yKey = y.data.map(v=>v.name+'='+v.total_points).join(',');
+      const yOld = youths.map(v=>v.name+'='+v.total_points).join(',');
+      const hChanged = h.data.length !== history.length;
+      const yChanged = yKey !== yOld;
+
+      if(yChanged) {
+        youths = y.data;
+        renderHome();
+        renderYouthListOnly();
+        renderConfigSilent();
+      }
+      if(hChanged) {
         history = h.data;
         renderHome();
         renderHistSilent();
-        renderConfigSilent();
-        // Atualiza pontos na lista de jovens sem resetar seleção
-        renderYouthListOnly();
       }
       if(!isOnline) { isOnline=true; setSyncState('online'); }
     }
   } catch(e) {}
-}, 5000);
+}, 4000);
 </script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js')</script>
 </body>
