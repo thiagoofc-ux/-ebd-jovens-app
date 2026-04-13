@@ -406,6 +406,8 @@ function showTab(id) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('screen-'+id).classList.add('active');
   document.getElementById('tab-'+id).classList.add('active');
+  if(id==='hist')   renderHist();
+  if(id==='config') renderConfig();
 }
 
 // ── HOME ───────────────────────────────────────────────────────────────────
@@ -603,7 +605,12 @@ function renderHist() {
   </table>`;
 }
 
-function setHistFilter(n) { histFilter=n; renderHist(); }
+function setHistFilter(n) {
+  histFilter = n;
+  const sel = document.getElementById('hist-person-select');
+  if(sel) sel.value = n;
+  renderHist();
+}
 
 function exportCSV() {
   const fp    = histFilter || document.getElementById('hist-person-select').value;
